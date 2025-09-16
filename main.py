@@ -30,10 +30,10 @@ except Exception as e:
     results_collection = None
 
 # Direktori tempat video disimpan
-VIDEO_DIR = 'processed_videos'
+VIDEO_DIR = 'Z:/monitoring/monitoring'
 
 # URL Logo Dishub Kota Bandung
-DISHUB_LOGO_URL = "logo.png"
+DISHUB_LOGO_URL = "https://monja-file.pptik.id/v1/view?path=/monitoring/logo.png"
 
 def generate_frames(filename):
     """Membaca video frame per frame dan yield sebagai respons multipart."""
