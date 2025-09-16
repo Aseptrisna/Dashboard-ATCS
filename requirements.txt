@@ -1,0 +1,5 @@
+pika
+pymongo
+opencv-python
+ultralytics
+python-dotenv
