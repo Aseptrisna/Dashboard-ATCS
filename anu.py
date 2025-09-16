@@ -144,6 +144,7 @@ def stream_page(camera_id):
             body { font-family: 'Inter', sans-serif; background-color: #f0f4f8; }
             .stat-card .value { transition: color 0.5s ease; }
             .stat-card.updating .value { color: #3b82f6; }
+            #video-stream { transition: opacity 0.5s ease-in-out; }
         </style>
     </head>
     <body class="p-4 sm:p-6 lg:p-8">
@@ -158,7 +159,7 @@ def stream_page(camera_id):
                 </div>
                  <div class="text-right">
                     <div id="clock" class="text-xl font-semibold text-gray-700"></div>
-                    <div class="text-sm text-gray-500">Selasa, 16 September 2025</div>
+                    <div id="date" class="text-sm text-gray-500"></div>
                 </div>
                 <a href="{{ url_for('index') }}" class="bg-white text-gray-800 font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-gray-100 transition-colors duration-300 flex items-center"><i class="fas fa-arrow-left mr-2"></i>Kembali</a>
             </header>
@@ -166,7 +167,7 @@ def stream_page(camera_id):
             {% if latest_result and camera_details %}
                 <main class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     <div class="lg:col-span-2 bg-black rounded-xl shadow-lg overflow-hidden">
-                         <img class="w-full h-full object-cover" src="{{ url_for('video_feed', filename=latest_result.filename_result) }}" alt="Video Stream">
+                         <img id="video-stream" class="w-full h-full object-cover" src="{{ url_for('video_feed', filename=latest_result.filename_result) }}" alt="Video Stream">
                     </div>
                     <div class="bg-white rounded-xl shadow-lg p-6">
                         <h2 class="text-xl font-bold text-gray-800 border-b pb-3 mb-4">Analitik Lalu Lintas</h2>
@@ -194,7 +195,6 @@ def stream_page(camera_id):
                         </div>
                         <div id="card-speed" class="stat-card bg-gray-100 mt-4 p-4 rounded-lg text-center col-span-2">
                              <i class="fas fa-tachometer-alt text-3xl text-gray-600 mb-2"></i>
-                           
                              <div class="label text-sm text-gray-600">Kecepatan Rata-rata (km/jam)</div>
                         </div>
                         <div id="processed_time" class="text-center text-sm text-gray-500 mt-6">
@@ -211,11 +211,18 @@ def stream_page(camera_id):
             {% endif %}
         </div>
         <script>
+            let currentFilename = "{{ latest_result.filename_result if latest_result else '' }}";
+
             function updateClock() {
                 const clockElement = document.getElementById('clock');
-                if(clockElement) {
+                const dateElement = document.getElementById('date');
+                if (clockElement && dateElement) {
                     const now = new Date();
-                    clockElement.textContent = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+                    const timeOptions = { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false };
+                    const dateOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+                    
+                    clockElement.textContent = now.toLocaleTimeString('id-ID', timeOptions).replace(/\\./g, ':');
+                    dateElement.textContent = now.toLocaleDateString('id-ID', dateOptions);
                 }
             }
             setInterval(updateClock, 1000);
@@ -236,19 +243,31 @@ def stream_page(camera_id):
                     const data = await response.json();
                     
                     if (data && Object.keys(data).length > 0) {
+                        // Update stats
                         const carEl = document.getElementById('total_car');
-                        const motorEl = document.getElementById('total_motorcycle');
-                        const busEl = document.getElementById('total_bus');
-                        const truckEl = document.getElementById('total_truck');
-                        const speedEl = document.getElementById('average_speed');
-
                         if(carEl.textContent !== String(data.total_car)) { carEl.textContent = data.total_car; flashUpdate('card-car'); }
-                        if(motorEl.textContent !== String(data.total_motorcycle)) { motorEl.textContent = data.total_motorcycle; flashUpdate('card-motor'); }
-                        if(busEl.textContent !== String(data.total_bus)) { busEl.textContent = data.total_bus; flashUpdate('card-bus'); }
-                        if(truckEl.textContent !== String(data.total_truck)) { truckEl.textContent = data.total_truck; flashUpdate('card-truck'); }
-                        if(speedEl.textContent !== String(data.average_speed.toFixed(2))) { speedEl.textContent = data.average_speed.toFixed(2); flashUpdate('card-speed'); }
-
+                        // ... (update other stats similarly)
+                        document.getElementById('total_motorcycle').textContent = data.total_motorcycle;
+                        document.getElementById('total_bus').textContent = data.total_bus;
+                        document.getElementById('total_truck').textContent = data.total_truck;
+                        document.getElementById('average_speed').textContent = data.average_speed.toFixed(2);
                         document.getElementById('processed_time').innerHTML = '<i class="fas fa-info-circle mr-1"></i>Diperbarui pada: ' + data.processed_time;
+
+                        // Check for new video and switch source if necessary
+                        if (data.filename_result && data.filename_result !== currentFilename) {
+                            console.log(`Beralih video dari ${currentFilename} ke ${data.filename_result}`);
+                            currentFilename = data.filename_result;
+                            const videoElement = document.getElementById('video-stream');
+                            if (videoElement) {
+                                videoElement.style.opacity = 0.5;
+                                setTimeout(() => {
+                                    videoElement.src = `/video_feed/${data.filename_result}`;
+                                    videoElement.onload = () => {
+                                        videoElement.style.opacity = 1;
+                                    };
+                                }, 500);
+                            }
+                        }
                     }
                 } catch (error) {
                     console.error('Gagal mengambil data terbaru:', error);
@@ -284,4 +303,4 @@ def video_feed(filename):
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=2345, debug=True)
 
- #  <div id="average_speed" class="value text-4xl font-bold text-gray-800">{{ "%.2f"|format(latest_result.average_speed) }}</div>
+# <div id="average_speed" class="value text-4xl font-bold text-gray-800">{{ "%.2f"|format(latest_result.average_speed) }}</div>
