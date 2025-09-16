@@ -30,10 +30,10 @@ except Exception as e:
     results_collection = None
 
 # Direktori tempat video disimpan
-VIDEO_DIR = 'processed_videos'
+VIDEO_DIR = 'Z:/monitoring/monitoring'
 
 # URL Logo Dishub Kota Bandung
-DISHUB_LOGO_URL = "logo.png"
+DISHUB_LOGO_URL = "https://monja-file.pptik.id/v1/view?path=/monitoring/logo.png"
 
 def generate_frames(filename):
     """Membaca video frame per frame dan yield sebagai respons multipart."""
@@ -76,96 +76,42 @@ def index():
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Dashboard Monitoring ATCS</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
         <style>
-            @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
+            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
             body { 
-                font-family: 'Poppins', sans-serif; 
-                background-color: #eef1f5; 
-                margin: 0;
-                padding: 20px;
-                display: flex;
-                justify-content: center;
-                align-items: flex-start;
-                min-height: 100vh;
-            }
-            .container { 
-                width: 100%; 
-                max-width: 900px; 
-            }
-            .header {
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                padding: 20px;
-                background-color: #ffffff;
-                border-radius: 12px;
-                box-shadow: 0 4px 15px rgba(0,0,0,0.07);
-                margin-bottom: 30px;
-                text-align: center;
-            }
-            .header img {
-                height: 60px;
-                margin-right: 20px;
-            }
-            .header h1 {
-                color: #2c3e50;
-                margin: 0;
-                font-size: 1.8rem;
-                font-weight: 700;
-            }
-            .grid-container {
-                display: grid;
-                grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-                gap: 20px;
-            }
-            .card {
-                background: #fff;
-                border-radius: 12px;
-                box-shadow: 0 4px 15px rgba(0,0,0,0.07);
-                overflow: hidden;
-                transition: transform 0.3s ease, box-shadow 0.3s ease;
-            }
-            .card:hover {
-                transform: translateY(-5px);
-                box-shadow: 0 8px 25px rgba(0,0,0,0.1);
-            }
-            .card a {
-                text-decoration: none;
-                color: inherit;
-                display: block;
-                padding: 25px;
-            }
-            .card-id {
-                font-size: 1.5rem;
-                font-weight: 700;
-                color: #0056b3;
-                margin-bottom: 8px;
-            }
-            .card-location {
-                font-size: 1rem;
-                color: #555;
+                font-family: 'Inter', sans-serif;
+                background-color: #f0f4f8;
             }
         </style>
     </head>
-    <body>
-        <div class="container">
-            <div class="header">
-                <img src="{{ logo_url }}" alt="Logo Dishub">
-                <h1>Monitoring ATCS Kota Bandung</h1>
-            </div>
+    <body class="flex justify-center items-start min-h-screen p-4 sm:p-6 lg:p-8">
+        <div class="w-full max-w-5xl">
+            <header class="flex items-center justify-center p-6 bg-white rounded-xl shadow-md mb-8">
+                <img src="{{ logo_url }}" alt="Logo Dishub" class="h-16 mr-6">
+                <h1 class="text-3xl font-bold text-gray-800 text-center">Monitoring ATCS Kota Bandung</h1>
+            </header>
+            
             {% if cameras %}
-                <div class="grid-container">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                     {% for camera in cameras %}
-                        <div class="card">
-                            <a href="{{ url_for('stream_page', camera_id=camera.camera_id) }}">
-                                <div class="card-id">Kamera {{ camera.camera_id }}</div>
-                                <div class="card-location">{{ camera.location_name }}</div>
-                            </a>
-                        </div>
+                        <a href="{{ url_for('stream_page', camera_id=camera.camera_id) }}" class="group block">
+                            <div class="bg-white p-6 rounded-xl shadow-md hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
+                                <div class="flex items-center mb-3">
+                                    <i class="fas fa-video text-2xl text-blue-500 mr-4"></i>
+                                    <h2 class="text-2xl font-bold text-gray-700">Kamera {{ camera.camera_id }}</h2>
+                                </div>
+                                <p class="text-gray-600 flex items-center"><i class="fas fa-map-marker-alt text-lg text-gray-400 mr-3"></i>{{ camera.location_name }}</p>
+                            </div>
+                        </a>
                     {% endfor %}
                 </div>
             {% else %}
-                <p style="text-align:center;">Tidak ada kamera ditemukan atau koneksi ke MongoDB gagal.</p>
+                <div class="bg-white p-8 rounded-xl shadow-md text-center">
+                    <i class="fas fa-exclamation-triangle text-4xl text-yellow-500 mb-4"></i>
+                    <p class="text-lg text-gray-700">Tidak ada kamera yang ditemukan atau koneksi ke MongoDB gagal.</p>
+                </div>
             {% endif %}
         </div>
     </body>
@@ -191,78 +137,123 @@ def stream_page(camera_id):
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Streaming Kamera {{ camera_id }}</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
         <style>
-            @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
-            body { font-family: 'Poppins', sans-serif; background-color: #eef1f5; margin: 0; padding: 20px; color: #333; }
-            .top-bar { display: flex; align-items: center; justify-content: space-between; max-width: 1400px; margin: 0 auto 20px auto; }
-            .header { display: flex; align-items: center; gap: 15px; }
-            .header img { height: 50px; }
-            .header h1 { font-size: 1.5rem; margin: 0; }
-            .back-link a { text-decoration: none; background-color: #fff; color: #333; padding: 10px 15px; border-radius: 8px; font-weight: 600; box-shadow: 0 2px 5px rgba(0,0,0,0.1); transition: all 0.2s ease; }
-            .back-link a:hover { background-color: #f0f0f0; }
-            .main-container { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; max-width: 1400px; margin: auto; }
-            .video-container, .stats-container { border-radius: 12px; background-color: #fff; box-shadow: 0 4px 15px rgba(0,0,0,0.07); padding: 20px; }
-            .video-stream { width: 100%; height: auto; border-radius: 8px; background-color: #000; }
-            h2 { border-bottom: 2px solid #eee; padding-bottom: 10px; margin-top: 0; }
-            .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px; }
-            .stat-card { background-color: #f8f9fa; padding: 15px; border-radius: 8px; text-align: center; }
-            .stat-card .value { font-size: 1.8rem; font-weight: 700; color: #0056b3; }
-            .stat-card .label { font-size: 0.9rem; color: #666; }
-            .timestamp { margin-top: 20px; text-align: center; font-size: 0.9rem; color: #888; }
-            @media (max-width: 992px) { .main-container { grid-template-columns: 1fr; } }
+            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+            body { font-family: 'Inter', sans-serif; background-color: #f0f4f8; }
+            .stat-card .value { transition: color 0.5s ease; }
+            .stat-card.updating .value { color: #3b82f6; }
         </style>
     </head>
-    <body>
-        <div class="top-bar">
-            <div class="header">
-                <img src="{{ logo_url }}" alt="Logo Dishub">
-                <h1>Live Monitoring: {{ camera_details.location_name if camera_details else camera_id }}</h1>
-            </div>
-            <div class="back-link"><a href="{{ url_for('index') }}">&larr; Kembali</a></div>
+    <body class="p-4 sm:p-6 lg:p-8">
+        <div class="max-w-7xl mx-auto">
+            <header class="flex flex-wrap items-center justify-between gap-4 mb-6">
+                <div class="flex items-center gap-4">
+                    <img src="{{ logo_url }}" alt="Logo Dishub" class="h-12">
+                    <div>
+                        <h1 class="text-2xl font-bold text-gray-800">Live Monitoring</h1>
+                        <p class="text-gray-600">{{ camera_details.location_name if camera_details else 'Kamera ' + camera_id }}</p>
+                    </div>
+                </div>
+                 <div class="text-right">
+                    <div id="clock" class="text-xl font-semibold text-gray-700"></div>
+                    <div class="text-sm text-gray-500">Selasa, 16 September 2025</div>
+                </div>
+                <a href="{{ url_for('index') }}" class="bg-white text-gray-800 font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-gray-100 transition-colors duration-300 flex items-center"><i class="fas fa-arrow-left mr-2"></i>Kembali</a>
+            </header>
+            
+            {% if latest_result and camera_details %}
+                <main class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div class="lg:col-span-2 bg-black rounded-xl shadow-lg overflow-hidden">
+                         <img class="w-full h-full object-cover" src="{{ url_for('video_feed', filename=latest_result.filename_result) }}" alt="Video Stream">
+                    </div>
+                    <div class="bg-white rounded-xl shadow-lg p-6">
+                        <h2 class="text-xl font-bold text-gray-800 border-b pb-3 mb-4">Analitik Lalu Lintas</h2>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div id="card-car" class="stat-card bg-blue-50 p-4 rounded-lg text-center">
+                                <i class="fas fa-car text-3xl text-blue-500 mb-2"></i>
+                                <div id="total_car" class="value text-4xl font-bold text-gray-800">{{ latest_result.total_car }}</div>
+                                <div class="label text-sm text-gray-600">Mobil</div>
+                            </div>
+                            <div id="card-motor" class="stat-card bg-green-50 p-4 rounded-lg text-center">
+                                <i class="fas fa-motorcycle text-3xl text-green-500 mb-2"></i>
+                                <div id="total_motorcycle" class="value text-4xl font-bold text-gray-800">{{ latest_result.total_motorcycle }}</div>
+                                <div class="label text-sm text-gray-600">Motor</div>
+                            </div>
+                            <div id="card-bus" class="stat-card bg-yellow-50 p-4 rounded-lg text-center">
+                                <i class="fas fa-bus text-3xl text-yellow-500 mb-2"></i>
+                                <div id="total_bus" class="value text-4xl font-bold text-gray-800">{{ latest_result.total_bus }}</div>
+                                <div class="label text-sm text-gray-600">Bus</div>
+                            </div>
+                            <div id="card-truck" class="stat-card bg-red-50 p-4 rounded-lg text-center">
+                                <i class="fas fa-truck text-3xl text-red-500 mb-2"></i>
+                                <div id="total_truck" class="value text-4xl font-bold text-gray-800">{{ latest_result.total_truck }}</div>
+                                <div class="label text-sm text-gray-600">Truk</div>
+                            </div>
+                        </div>
+                        <div id="card-speed" class="stat-card bg-gray-100 mt-4 p-4 rounded-lg text-center col-span-2">
+                             <i class="fas fa-tachometer-alt text-3xl text-gray-600 mb-2"></i>
+                           
+                             <div class="label text-sm text-gray-600">Kecepatan Rata-rata (km/jam)</div>
+                        </div>
+                        <div id="processed_time" class="text-center text-sm text-gray-500 mt-6">
+                            <i class="fas fa-info-circle mr-1"></i>Diperbarui pada: {{ latest_result.processed_time }}
+                        </div>
+                    </div>
+                </main>
+            {% else %}
+                <div class="bg-white p-8 rounded-xl shadow-md text-center mt-6">
+                    <i class="fas fa-video-slash text-5xl text-red-500 mb-4"></i>
+                    <h1 class="text-2xl font-bold text-gray-800">Data Tidak Ditemukan</h1>
+                    <p class="text-gray-600 mt-2">Tidak ada data hasil proses yang ditemukan untuk kamera ID: {{ camera_id }}</p>
+                </div>
+            {% endif %}
         </div>
-        
-        {% if latest_result and camera_details %}
-            <div class="main-container">
-                <div class="video-container">
-                    <h2>Live Stream</h2>
-                    <img class="video-stream" src="{{ url_for('video_feed', filename=latest_result.filename_result) }}" alt="Video Stream">
-                </div>
-                <div class="stats-container">
-                    <h2>Analitik Lalu Lintas</h2>
-                    <div class="stats-grid">
-                        <div class="stat-card"><div id="total_car" class="value">{{ latest_result.total_car }}</div><div class="label">Mobil</div></div>
-                        <div class="stat-card"><div id="total_motorcycle" class="value">{{ latest_result.total_motorcycle }}</div><div class="label">Motor</div></div>
-                        <div class="stat-card"><div id="total_bus" class="value">{{ latest_result.total_bus }}</div><div class="label">Bus</div></div>
-                        <div class="stat-card"><div id="total_truck" class="value">{{ latest_result.total_truck }}</div><div class="label">Truk</div></div>
-                    </div>
-                    <div class="stats-grid" style="margin-top: 20px;">
-                         <div class="stat-card" style="grid-column: 1 / -1;"><div id="average_speed" class="value">{{ "%.2f"|format(latest_result.average_speed) }}</div><div class="label">Kecepatan Rata-rata (km/jam)</div></div>
-                    </div>
-                    <div id="processed_time" class="timestamp">Diperbarui pada: {{ latest_result.processed_time }}</div>
-                </div>
-            </div>
-        {% else %}
-            <h1 style="text-align:center;">Data tidak ditemukan untuk kamera ID: {{ camera_id }}</h1>
-        {% endif %}
-
         <script>
+            function updateClock() {
+                const clockElement = document.getElementById('clock');
+                if(clockElement) {
+                    const now = new Date();
+                    clockElement.textContent = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+                }
+            }
+            setInterval(updateClock, 1000);
+            updateClock();
+
+            function flashUpdate(elementId) {
+                const card = document.getElementById(elementId);
+                if(card) {
+                    card.classList.add('updating');
+                    setTimeout(() => card.classList.remove('updating'), 1000);
+                }
+            }
+
             setInterval(async () => {
                 try {
                     const response = await fetch("{{ url_for('api_latest_result', camera_id=camera_id) }}");
                     if (!response.ok) throw new Error('Network response was not ok');
                     const data = await response.json();
+                    
                     if (data && Object.keys(data).length > 0) {
-                        document.getElementById('total_car').textContent = data.total_car;
-                        document.getElementById('total_motorcycle').textContent = data.total_motorcycle;
-                        document.getElementById('total_bus').textContent = data.total_bus;
-                        document.getElementById('total_truck').textContent = data.total_truck;
-                        document.getElementById('average_speed').textContent = data.average_speed.toFixed(2);
-                        document.getElementById('processed_time').textContent = 'Diperbarui pada: ' + data.processed_time;
+                        const carEl = document.getElementById('total_car');
+                        const motorEl = document.getElementById('total_motorcycle');
+                        const busEl = document.getElementById('total_bus');
+                        const truckEl = document.getElementById('total_truck');
+                        const speedEl = document.getElementById('average_speed');
+
+                        if(carEl.textContent !== String(data.total_car)) { carEl.textContent = data.total_car; flashUpdate('card-car'); }
+                        if(motorEl.textContent !== String(data.total_motorcycle)) { motorEl.textContent = data.total_motorcycle; flashUpdate('card-motor'); }
+                        if(busEl.textContent !== String(data.total_bus)) { busEl.textContent = data.total_bus; flashUpdate('card-bus'); }
+                        if(truckEl.textContent !== String(data.total_truck)) { truckEl.textContent = data.total_truck; flashUpdate('card-truck'); }
+                        if(speedEl.textContent !== String(data.average_speed.toFixed(2))) { speedEl.textContent = data.average_speed.toFixed(2); flashUpdate('card-speed'); }
+
+                        document.getElementById('processed_time').innerHTML = '<i class="fas fa-info-circle mr-1"></i>Diperbarui pada: ' + data.processed_time;
                     }
                 } catch (error) {
                     console.error('Gagal mengambil data terbaru:', error);
                 }
-            }, 10000); // 10000 milidetik = 10 detik
+            }, 10000); // 10 detik
         </script>
     </body>
     </html>
@@ -280,7 +271,6 @@ def api_latest_result(camera_id):
     if not latest_result:
         return jsonify({})
 
-    # Konversi ObjectId ke string dan format waktu
     latest_result['_id'] = str(latest_result['_id'])
     latest_result['processed_time'] = datetime.fromtimestamp(latest_result['processed_at']).strftime('%d %B %Y, %H:%M:%S')
     
@@ -292,5 +282,6 @@ def video_feed(filename):
     return Response(generate_frames(filename), mimetype='multipart/x-mixed-replace; boundary=frame')
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    app.run(host='0.0.0.0', port=2345, debug=True)
 
+ #  <div id="average_speed" class="value text-4xl font-bold text-gray-800">{{ "%.2f"|format(latest_result.average_speed) }}</div>
