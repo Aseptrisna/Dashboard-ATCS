@@ -1,5 +1,6 @@
-pika
+flask
 pymongo
 opencv-python
 ultralytics
-python-dotenv
+numpy
+redis
