@@ -193,4 +193,4 @@ def get_stats(camera_id):
 
 # --- Main Execution ---
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=1616, debug=True)
+    app.run(host='0.0.0.0', port=5078, debug=True)
