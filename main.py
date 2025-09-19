@@ -23,7 +23,7 @@ MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017/traffic_monitoring
 client = MongoClient(MONGO_URI)
 db = client.get_database()
 cameras_collection = db["cameras"]
-stats_collection = db["daily_stats"]
+stats_collection = db["stats_collection"]
 
 # Muat Model YOLOv8
 print("APP: Memuat model YOLOv8...")
@@ -158,29 +158,38 @@ def video_feed(camera_id):
 def get_stats(camera_id):
     """Endpoint API untuk mengambil data statistik dari MongoDB."""
     today_str = datetime.now().strftime("%Y-%m-%d")
-    stats_data = stats_collection.find_one({"_id": f"{camera_id}_{today_str}"})
+
+    # --- INI BAGIAN QUERY YANG DIPERBAIKI ---
+    # Kita mencari dokumen yang field 'camera_id'-nya cocok DAN
+    # field 'date'-nya adalah tanggal hari ini.
+    query = {
+        "camera_id": camera_id,
+        "date": today_str
+    }
+    print(f"APP: Mencari statistik untuk kamera {camera_id} pada {today_str}")
+    stats_data = stats_collection.find_one(query)
+    # -----------------------------------------
+    print(f"APP: Data statistik ditemukan: {stats_data}")
     
     if stats_data:
-        # --- BLOK INI DIMODIFIKASI ---
-        speeds = stats_data.get("speeds", [])
-        avg_speed = sum(speeds) / len(speeds) if speeds else 0
-        
+        # Ambil data dari dokumen yang ditemukan
         response_data = {
             "total_car": stats_data.get("total_car", 0),
             "total_motorcycle": stats_data.get("total_motorcycle", 0),
             "total_bus": stats_data.get("total_bus", 0),
             "total_truck": stats_data.get("total_truck", 0),
-            "average_speed": round(avg_speed, 2)
+            "average_speed": stats_data.get("average_speed", 0.0)
         }
-        # ----------------------------
         return jsonify(response_data)
     else:
-        # --- BLOK INI DIMODIFIKASI ---
+        # Jika tidak ada data untuk hari ini, kembalikan nilai nol
         return jsonify({
-            "total_car": 0, "total_motorcycle": 0, "total_bus": 0, 
-            "total_truck": 0, "average_speed": 0
+            "total_car": 0, 
+            "total_motorcycle": 0, 
+            "total_bus": 0, 
+            "total_truck": 0, 
+            "average_speed": 0.0
         })
-        # ----------------------------
 
 # --- Main Execution ---
 if __name__ == '__main__':
