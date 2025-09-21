@@ -5,181 +5,368 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Detail Kamera {{ camera.camera_id }}</title>
     <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f0f2f5;
-            margin: 0;
-            color: #333;
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
+        :root { --header-bg: #404446; --body-bg: #f0f2f5; --card-bg: #ffffff; --text-color: #333; --shadow: 0 4px 12px rgba(0,0,0,0.1); --border-radius: 8px; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: var(--body-bg); margin: 0; color: var(--text-color); }
+        .container { padding: 20px; max-width: 1400px; margin: auto; }
+        header { background-color: var(--header-bg); color: white; padding: 10px 30px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: space-between; }
+        header h1 { margin: 0; font-size: 1.6em; }
+        .back-link { color: white; text-decoration: none; font-size: 1em; padding: 8px 15px; border: 1px solid white; border-radius: 5px; transition: background-color 0.2s; }
+        .back-link:hover { background-color: rgba(255,255,255,0.2); }
+        .streams-wrapper { display: flex; flex-wrap: wrap; gap: 20px; margin-bottom: 20px; }
+        .video-container { flex: 1; min-width: 300px; background-color: var(--card-bg); border-radius: var(--border-radius); box-shadow: var(--shadow); padding: 15px; position: relative; } /* Tambah position relative */
+        .video-container h3 { margin-top: 0; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+        .video-container img { width: 100%; border-radius: 5px; background-color: #000; display: block; }
+        .stats-container { background-color: var(--card-bg); padding: 20px; border-radius: var(--border-radius); box-shadow: var(--shadow); margin-bottom: 20px; }
+        .stats-container h2 { margin-top: 0; color: #005a9c; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-top: 20px; }
+        .stat-item { background-color: #f8f9fa; padding: 15px; border-radius: 6px; border-left: 5px solid #007bff; }
+        .stat-item .label { font-size: 0.9em; color: #6c757d; margin-bottom: 5px; display: block; }
+        .stat-item .value { font-size: 1.8em; font-weight: bold; color: #343a40; }
+        .history-container { background-color: #fff; padding: 20px; border-radius: var(--border-radius); box-shadow: var(--shadow); margin-bottom: 20px; }
+        .history-container h2 { margin-top: 0; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.9em; }
+        th, td { padding: 10px; border-bottom: 1px solid #ddd; text-align: left; word-break: break-all; }
+        th { background-color: #f2f2f2; }
+        .pagination { margin-top: 15px; text-align: center; }
+        .pagination a, .pagination span { margin: 0 5px; padding: 8px 12px; text-decoration: none; color: #007bff; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; }
+        .pagination a:hover { background-color: #f0f0f0; }
+        .pagination .current { background-color: #007bff; color: white; border-color: #007bff; }
+        .pagination .disabled { color: #ccc; pointer-events: none; opacity: 0.6; }
+
+        .status { padding: 4px 10px; border-radius: 12px; color: white; font-size: 0.8em; font-weight: bold; text-transform: capitalize; }
+        .status-processed { background-color: #28a745; }
+        .status-pending { background-color: #dc3545; }
+        
+        /* -- CSS BARU UNTUK LOADING & ERROR -- */
+        .loading-overlay, .error-overlay {
+            position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            background-color: rgba(255, 255, 255, 0.8);
+            display: flex; justify-content: center; align-items: center;
+            flex-direction: column; text-align: center;
+            border-radius: var(--border-radius);
+            z-index: 10;
         }
-        header {
-            background-color: #404446;
-            color: white;
-            padding: 10px 30px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            display: flex;
-            align-items: center;
+        .error-overlay { background-color: rgba(255, 235, 238, 0.9); }
+        .spinner {
+            border: 4px solid #f3f3f3; border-top: 4px solid #3498db;
+            border-radius: 50%; width: 40px; height: 40px;
+            animation: spin 1s linear infinite;
         }
-        .logo {
-            height: 50px;
-            width: auto;
-        }
-        header h1 {
-            margin: 0 20px;
-            font-size: 1.6em;
-            flex-grow: 1; /* Allow h1 to take available space */
-        }
-        .back-link {
-            color: white;
-            text-decoration: none;
-            font-size: 1em;
-            padding: 8px 15px;
-            border: 1px solid white;
-            border-radius: 5px;
-            transition: background-color 0.2s;
-            white-space: nowrap;
-            margin-left: auto; /* Push link to the right */
-        }
-        .back-link:hover {
-            background-color: rgba(255,255,255,0.2);
-        }
-        .main-container {
-            display: flex;
-            flex-wrap: wrap;
-            padding: 20px;
-            gap: 20px;
-            flex: 1; /* Make main content grow */
-        }
-        .stream-container {
-            flex: 3;
-            min-width: 60%;
-            background-color: #000;
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-        .stream-container img {
-            max-width: 100%;
-            max-height: 80vh;
-            display: block;
-        }
-        .stats-container {
-            flex: 1;
-            min-width: 300px;
-            background-color: #fff;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            align-self: flex-start;
-        }
-        .stats-container h2 {
-            margin-top: 0;
-            color: #005a9c;
-            border-bottom: 2px solid #eee;
-            padding-bottom: 10px;
-        }
-        .stats-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin-top: 20px;
-        }
-        .stat-item {
-            background-color: #f8f9fa;
-            padding: 15px;
-            border-radius: 6px;
-            border-left: 5px solid #007bff;
-        }
-        .stat-item.speed {
-            grid-column: 1 / -1; /* Span full width */
-            border-left-color: #28a745;
-        }
-        .stat-item .label {
-            font-size: 0.9em;
-            color: #6c757d;
-            margin-bottom: 5px;
-            display: block;
-        }
-        .stat-item .value {
-            font-size: 1.8em;
-            font-weight: bold;
-            color: #343a40;
-        }
-        footer {
-            text-align: center;
-            padding: 20px;
-            background-color: #343a40;
-            color: #f8f9fa;
-            width: 100%;
-        }
+        .error-message { color: #721c24; font-weight: bold; padding: 10px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .hidden { display: none !important; }
+
     </style>
 </head>
 <body>
     <header>
-        <img src="/static/logo.png" alt="Logo Dishub" class="logo">
         <h1>Monitoring Kamera: {{ camera.camera_id }} ({{ camera.location_name }})</h1>
-        <img src="/static/itb.png" alt="Logo ITB" class="logo" style="margin-left: 20px;">
-        <a href="/" class="back-link">&larr; Kembali ke Daftar Kamera</a>
+        <a href="{{ url_for('index') }}" class="back-link">&larr; Kembali ke Daftar</a>
     </header>
 
-    <div class="main-container">
-        <div class="stream-container">
-            <img src="{{ url_for('video_feed', camera_id=camera.camera_id) }}" alt="Live Stream Kamera {{ camera.camera_id }}">
-        </div>
-        <div class="stats-container">
-            <h2>Statistik Hari Ini</h2>
-            <div class="stats-grid">
-                <div class="stat-item speed">
-                    <span class="label">Rata-rata Kecepatan</span>
-                    <span class="value" id="avg-speed">0 km/h</span>
+    <div class="container">
+        <div class="streams-wrapper">
+            <div class="video-container" id="raw-video-container">
+                <h3>Video Asli (RAW)</h3>
+                <img id="raw-video-stream" src="" alt="Raw Video Stream">
+                <div class="loading-overlay" id="raw-video-loading">
+                    <div class="spinner"></div>
                 </div>
-                <div class="stat-item">
-                    <span class="label">Total Mobil</span>
-                    <span class="value" id="total-car">0</span>
-                </div>
-                <div class="stat-item">
-                    <span class="label">Total Motor</span>
-                    <span class="value" id="total-motorcycle">0</span>
-                </div>
-                <div class="stat-item">
-                    <span class="label">Total Bus</span>
-                    <span class="value" id="total-bus">0</span>
-                </div>
-                <div class="stat-item">
-                    <span class="label">Total Truk</span>
-                    <span class="value" id="total-truck">0</span>
+                <div class="error-overlay hidden" id="raw-video-error">
+                    <span class="error-message">Gagal memuat stream video.</span>
                 </div>
             </div>
+            <div class="video-container" id="processed-video-container">
+                <h3>Video Hasil Proses AI</h3>
+                <img id="processed-video-stream" src="" alt="Processed Video Stream">
+                <div class="loading-overlay" id="processed-video-loading">
+                    <div class="spinner"></div>
+                </div>
+                 <div class="error-overlay hidden" id="processed-video-error">
+                    <span class="error-message">Gagal memuat stream video.</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="stats-container" id="stats-container">
+            <h2>Statistik Hari Ini</h2>
+            <div class="stats-grid" id="stats-grid">
+                 </div>
+            <div class="loading-overlay hidden" id="stats-loading">
+                <div class="spinner"></div>
+            </div>
+            <div class="error-overlay hidden" id="stats-error">
+                <span class="error-message">Gagal memuat data statistik.</span>
+            </div>
+        </div>
+
+        <div class="history-container" id="downloader-history-container">
+            <h2>Riwayat Video Masuk (Downloader)</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Filename</th>
+                        <th>Tanggal</th>
+                        <th>Waktu</th>
+                        <th>Status Proses AI</th>
+                        <th>Aksi</th>
+                    </tr>
+                </thead>
+                <tbody id="downloader-history-body">
+                    {% for item in downloader_history %}
+                    <tr>
+                        <td>{{ item.filename }}</td>
+                        <td>{{ item.date }}</td>
+                        <td>{{ item.time }}</td>
+                        <td>
+                            {% if item.AI_process %}
+                                <span class="status status-processed">Sudah Proses</span>
+                            {% else %}
+                                <span class="status status-pending">Belum Proses</span>
+                            {% endif %}
+                        </td>
+                        <td><a href="{{ url_for('serve_raw_video', filename=item.filename) }}" target="_blank">Lihat Stream</a></td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="5" style="text-align: center;">Tidak ada riwayat.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+             <div class="loading-overlay hidden" id="downloader-loading">
+                 <div class="spinner"></div>
+            </div>
+            <div class="pagination" id="downloader-pagination" data-total-pages="{{ total_pages_downloader }}" data-current-page="1"></div>
+        </div>
+        
+        <div class="history-container" id="results-history-container">
+            <h2>Riwayat Video Hasil Proses (ATCS Results)</h2>
+            <table>
+                <thead><tr><th>Filename Hasil</th><th>Mobil</th><th>Motor</th><th>Bus</th><th>Truk</th><th>Aksi</th></tr></thead>
+                <tbody id="results-history-body">
+                    {% for item in results_history %}
+                    <tr>
+                        <td>{{ item.filename_result }}</td>
+                        <td>{{ item.get('total_car', 0) }}</td>
+                        <td>{{ item.get('total_motorcycle', 0) }}</td>
+                        <td>{{ item.get('total_bus', 0) }}</td>
+                        <td>{{ item.get('total_truck', 0) }}</td>
+                        <td><a href="{{ url_for('serve_processed_video', filename=item.filename_result) }}" target="_blank">Lihat Stream</a></td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="6" style="text-align: center;">Tidak ada riwayat.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+             <div class="loading-overlay hidden" id="results-loading">
+                 <div class="spinner"></div>
+            </div>
+            <div class="pagination" id="results-pagination" data-total-pages="{{ total_pages_results }}" data-current-page="1"></div>
         </div>
     </div>
 
     <script>
-        function updateStats() {
-            fetch(`/stats/{{ camera.camera_id }}`)
-                .then(response => response.json())
-                .then(data => {
-                    document.getElementById('avg-speed').textContent = data.average_speed + ' km/h';
-                    document.getElementById('total-car').textContent = data.total_car;
-                    document.getElementById('total-motorcycle').textContent = data.total_motorcycle;
-                    document.getElementById('total-bus').textContent = data.total_bus;
-                    document.getElementById('total-truck').textContent = data.total_truck;
-                })
-                .catch(error => console.error('Error fetching stats:', error));
+        const cameraId = '{{ camera.camera_id }}';
+        
+        // --- Fungsi Helper untuk mengelola tampilan Loading/Error ---
+        function showLoading(elementId) {
+            document.getElementById(elementId).classList.remove('hidden');
+        }
+        function hideLoading(elementId) {
+            document.getElementById(elementId).classList.add('hidden');
+        }
+        function showError(containerId, message) {
+            const container = document.getElementById(containerId);
+            container.querySelector('.error-overlay').classList.remove('hidden');
+            container.querySelector('.error-message').textContent = message;
+        }
+        function hideError(containerId) {
+             const container = document.getElementById(containerId);
+             container.querySelector('.error-overlay').classList.add('hidden');
         }
 
-        // Panggil pertama kali saat halaman dimuat, lalu setiap 5 detik
-        updateStats();
-        setInterval(updateStats, 5000);
+        // --- LOGIKA PAGINASI ASINKRON ---
+        function renderDownloaderTable(data) {
+            const tbody = document.getElementById('downloader-history-body');
+            tbody.innerHTML = '';
+            if (!data || data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Tidak ada riwayat untuk halaman ini.</td></tr>';
+                return;
+            }
+            data.forEach(item => {
+                const row = `
+                    <tr>
+                        <td>${item.filename}</td>
+                        <td>${item.date}</td>
+                        <td>${item.time}</td>
+                        <td>
+                            ${item.AI_process 
+                                ? '<span class="status status-processed">Sudah Proses</span>' 
+                                : '<span class="status status-pending">Belum Proses</span>'
+                            }
+                        </td>
+                        <td><a href="/videos/raw/${item.filename}" target="_blank">Lihat Stream</a></td>
+                    </tr>`;
+                tbody.insertAdjacentHTML('beforeend', row);
+            });
+        }
+
+        function renderResultsTable(data) {
+            const tbody = document.getElementById('results-history-body');
+            tbody.innerHTML = '';
+            if (!data || data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">Tidak ada riwayat untuk halaman ini.</td></tr>';
+                return;
+            }
+            data.forEach(item => {
+                const row = `
+                    <tr>
+                        <td>${item.filename_result}</td>
+                        <td>${item.total_car || 0}</td>
+                        <td>${item.total_motorcycle || 0}</td>
+                        <td>${item.total_bus || 0}</td>
+                        <td>${item.total_truck || 0}</td>
+                        <td><a href="/videos/processed/${item.filename_result}" target="_blank">Lihat Stream</a></td>
+                    </tr>`;
+                tbody.insertAdjacentHTML('beforeend', row);
+            });
+        }
+        
+        function renderPagination(containerId, currentPage, totalPages) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+            if (totalPages <= 1) return;
+
+            const prevDisabled = (currentPage === 1) ? 'disabled' : '';
+            container.innerHTML += `<a class="${prevDisabled}" data-page="${currentPage - 1}">Sebelumnya</a>`;
+
+            container.innerHTML += `<span>Halaman ${currentPage} dari ${totalPages}</span>`;
+
+            const nextDisabled = (currentPage >= totalPages) ? 'disabled' : '';
+            container.innerHTML += `<a class="${nextDisabled}" data-page="${currentPage + 1}">Berikutnya</a>`;
+        }
+
+        async function fetchHistory(type, page) {
+            const loadingId = type === 'downloader' ? 'downloader-loading' : 'results-loading';
+            showLoading(loadingId);
+            try {
+                const response = await fetch(`/api/history/${type}/${cameraId}?page=${page}`);
+                if (!response.ok) {
+                    throw new Error(`Gagal memuat data (Status: ${response.status})`);
+                }
+                const data = await response.json();
+
+                if (type === 'downloader') {
+                    renderDownloaderTable(data);
+                    document.getElementById('downloader-pagination').dataset.currentPage = page;
+                } else if (type === 'results') {
+                    renderResultsTable(data);
+                    document.getElementById('results-pagination').dataset.currentPage = page;
+                }
+            } catch (error) {
+                console.error(`Gagal memuat riwayat ${type}:`, error);
+                const tableId = type === 'downloader' ? 'downloader-history-body' : 'results-history-body';
+                const colSpan = type === 'downloader' ? 5 : 6;
+                document.getElementById(tableId).innerHTML = `<tr><td colspan="${colSpan}" style="text-align: center; color: red;">${error.message}</td></tr>`;
+            } finally {
+                hideLoading(loadingId);
+            }
+        }
+        
+        // --- FUNGSI UPDATE DATA REAL-TIME ---
+        const rawVideoStream = document.getElementById('raw-video-stream');
+        const processedVideoStream = document.getElementById('processed-video-stream');
+        
+        async function updateVideos() {
+            hideError('raw-video-container');
+            hideError('processed-video-container');
+            showLoading('raw-video-loading');
+            showLoading('processed-video-loading');
+
+            try {
+                const response = await fetch(`/api/latest_videos/${cameraId}`);
+                 if (!response.ok) throw new Error('Gagal mengambil URL video.');
+                const data = await response.json();
+                
+                if (data.raw_video_url && rawVideoStream.getAttribute('src') !== data.raw_video_url) {
+                    rawVideoStream.src = data.raw_video_url;
+                } else if (!data.raw_video_url) {
+                    showError('raw-video-container', 'Stream video tidak tersedia.');
+                }
+                
+                if (data.processed_video_url && processedVideoStream.getAttribute('src') !== data.processed_video_url) {
+                    processedVideoStream.src = data.processed_video_url;
+                } else if (!data.processed_video_url) {
+                    showError('processed-video-container', 'Stream video tidak tersedia.');
+                }
+
+            } catch(error) {
+                console.error('Gagal update video:', error);
+                showError('raw-video-container', error.message);
+                showError('processed-video-container', error.message);
+            } finally {
+                // Sembunyikan loading setelah gambar mulai dimuat (atau gagal)
+                rawVideoStream.onload = () => hideLoading('raw-video-loading');
+                rawVideoStream.onerror = () => { hideLoading('raw-video-loading'); showError('raw-video-container', 'Gagal memuat stream video.'); };
+                processedVideoStream.onload = () => hideLoading('processed-video-loading');
+                processedVideoStream.onerror = () => { hideLoading('processed-video-loading'); showError('processed-video-container', 'Gagal memuat stream video.'); };
+            }
+        }
+
+        async function updateStats() {
+            const statsGrid = document.getElementById('stats-grid');
+            showLoading('stats-loading');
+            hideError('stats-container');
+            try {
+                const response = await fetch(`/stats/${cameraId}`);
+                if (!response.ok) throw new Error('Gagal mengambil data statistik.');
+                const data = await response.json();
+                
+                statsGrid.innerHTML = `
+                    <div class="stat-item"><span class="label">Rata-rata Kecepatan</span><span class="value">${(data.average_speed || 0).toFixed(2)} km/h</span></div>
+                    <div class="stat-item"><span class="label">Total Mobil</span><span class="value">${data.total_car || 0}</span></div>
+                    <div class="stat-item"><span class="label">Total Motor</span><span class="value">${data.total_motorcycle || 0}</span></div>
+                    <div class="stat-item"><span class="label">Total Bus</span><span class="value">${data.total_bus || 0}</span></div>
+                    <div class="stat-item"><span class="label">Total Truk</span><span class="value">${data.total_truck || 0}</span></div>
+                `;
+            } catch (error) {
+                console.error('Gagal update statistik:', error);
+                statsGrid.innerHTML = ''; // Kosongkan grid
+                showError('stats-container', error.message);
+            } finally {
+                hideLoading('stats-loading');
+            }
+        }
+        
+        // --- INISIALISASI DAN EVENT LISTENERS ---
+        document.addEventListener('DOMContentLoaded', function() {
+            updateVideos();
+            updateStats();
+            setInterval(updateVideos, 15000); // Perpanjang interval agar tidak terlalu sering
+            setInterval(updateStats, 15000);
+
+            const downloaderPagination = document.getElementById('downloader-pagination');
+            renderPagination('downloader-pagination', 1, parseInt(downloaderPagination.dataset.totalPages));
+            const resultsPagination = document.getElementById('results-pagination');
+            renderPagination('results-pagination', 1, parseInt(resultsPagination.dataset.totalPages));
+        });
+        
+        document.addEventListener('click', async function(e) {
+            const target = e.target;
+            if (target.matches('.pagination a') && !target.classList.contains('disabled')) {
+                e.preventDefault();
+                const paginationContainer = target.closest('.pagination');
+                const page = parseInt(target.dataset.page);
+                const totalPages = parseInt(paginationContainer.dataset.totalPages);
+                
+                if (paginationContainer.id === 'downloader-pagination') {
+                    await fetchHistory('downloader', page);
+                    renderPagination('downloader-pagination', page, totalPages);
+                } else if (paginationContainer.id === 'results-pagination') {
+                    await fetchHistory('results', page);
+                    renderPagination('results-pagination', page, totalPages);
+                }
+            }
+        });
     </script>
-    
-    <footer>
-        <p>Kolaborasi antara Dinas Perhubungan Kota Bandung dan Institut Teknologi Bandung &copy; 2025</p>
-    </footer>
 </body>
 </html>
-
