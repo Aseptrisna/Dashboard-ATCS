@@ -15,6 +15,10 @@
             --card-border-color: #dee2e6;
             --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             --border-radius: 0.5rem;
+            /* BARU: Variabel warna untuk notifikasi error */
+            --error-bg: #f8d7da;
+            --error-text: #721c24;
+            --error-border: #f5c2c7;
         }
 
         body {
@@ -54,7 +58,7 @@
         }
 
         .container {
-            max-width: 1600px; /* Lebarkan kontainer untuk 4 kolom */
+            max-width: 1600px;
             margin: 2.5rem auto;
             padding: 0 2rem;
             flex: 1;
@@ -70,7 +74,7 @@
 
         .camera-list {
             display: grid;
-            grid-template-columns: repeat(4, 1fr); /* Default: 4 kolom */
+            grid-template-columns: repeat(4, 1fr);
             gap: 2rem;
             list-style: none;
             padding: 0;
@@ -138,7 +142,7 @@
             font-weight: 600;
             text-align: center;
             transition: background-color 0.3s ease, transform 0.2s ease;
-            align-self: flex-start; /* Align button to the start of the flex container */
+            align-self: flex-start;
         }
 
         .stream-link-btn:hover {
@@ -154,69 +158,94 @@
             width: 100%;
         }
 
-        /* Media Queries for Responsiveness */
-        @media (max-width: 1400px) { /* Layar lebih kecil (mis. laptop) */
-            .camera-list {
-                grid-template-columns: repeat(3, 1fr);
-            }
+        /* BARU: CSS untuk Loading & Error */
+        #page-loader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--surface-color);
+            z-index: 9999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 0.5s ease; /* Transisi untuk menghilang */
         }
 
-        @media (max-width: 992px) { /* Tablet */
-            .camera-list {
-                grid-template-columns: repeat(2, 1fr);
-            }
+        .spinner {
+            border: 6px solid #f3f3f3;
+            border-top: 6px solid var(--primary-color);
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            animation: spin 1s linear infinite;
         }
-        
-        @media (max-width: 768px) { /* Ponsel */
-            .camera-list {
-                grid-template-columns: 1fr;
-            }
-            header {
-                flex-direction: column;
-                padding: 1rem;
-            }
-            header h1 {
-                font-size: 1.5em;
-                margin: 0.5rem 0;
-            }
-            .logo {
-                height: 40px;
-            }
-            .container {
-                margin: 1.5rem auto;
-                padding: 0 1rem;
-            }
-            .page-title {
-                font-size: 2em;
-            }
+
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        .error-container {
+            background-color: var(--error-bg);
+            color: var(--error-text);
+            border: 1px solid var(--error-border);
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+            margin: 1rem auto;
+            max-width: 800px;
+            text-align: center;
+        }
+
+        .error-container strong {
+            display: block;
+            font-size: 1.5em;
+            margin-bottom: 0.5rem;
+        }
+
+        /* Media Queries */
+        @media (max-width: 1400px) { .camera-list { grid-template-columns: repeat(3, 1fr); } }
+        @media (max-width: 992px) { .camera-list { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 768px) {
+            .camera-list { grid-template-columns: 1fr; }
+            header { flex-direction: column; padding: 1rem; }
+            header h1 { font-size: 1.5em; margin: 0.5rem 0; }
+            .logo { height: 40px; }
+            .container { margin: 1.5rem auto; padding: 0 1rem; }
+            .page-title { font-size: 2em; }
         }
     </style>
 </head>
 <body>
+    <div id="page-loader">
+        <div class="spinner"></div>
+    </div>
+
     <header>
         <img src="/static/logo.png" alt="Logo Dishub" class="logo">
         <h1>Dashboard Monitoring Lalu Lintas</h1>
         <img src="/static/itb.png" alt="Logo ITB" class="logo">
     </header>
+
     <div class="container">
         <h2 class="page-title">Pilih Titik Pantau Kamera</h2>
-        {% if cameras %}
+
+        {% if error %}
+            <div class="error-container">
+                <strong>Terjadi Kesalahan</strong>
+                <p>{{ error }}</p>
+                <p>Silakan coba lagi nanti atau hubungi administrator.</p>
+            </div>
+        {% elif cameras %}
             <ul class="camera-list">
                 {% for camera in cameras %}
                     <li class="camera-item">
                         <div class="card-header">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
-                                <circle cx="12" cy="13" r="4"></circle>
-                            </svg>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
                             <span>ID Kamera: {{ camera.camera_id }}</span>
                         </div>
                         <div class="card-body">
                             <div>
                                 <p class="location"><strong>Lokasi:</strong> {{ camera.location_name }}</p>
-                                <p class="status">
-                                    <strong>Status:</strong> <span class="status-indicator"></span>Online
-                                </p>
+                                <p class="status"><strong>Status:</strong> <span class="status-indicator"></span>Online</p>
                             </div>
                             <a href="{{ url_for('camera_detail', camera_id=camera.camera_id) }}" class="stream-link-btn">Lihat Stream Langsung</a>
                         </div>
@@ -227,9 +256,20 @@
             <p style="text-align: center;">Tidak ada kamera yang ditemukan di database.</p>
         {% endif %}
     </div>
+
     <footer>
-        <p>Kolaborasi antara Dinas Perhubungan Kota Bandung dan Institut Teknologi Bandung &copy; 2025</p>
+        <p>Kolaborasi antara Dinas Perhubungan dan Institut Teknologi Bandung &copy; 2025</p>
     </footer>
+
+    <script>
+        window.onload = function() {
+            const loader = document.getElementById('page-loader');
+            // Tambahkan efek fade out sebelum menghilangkannya
+            loader.style.opacity = '0';
+            setTimeout(() => {
+                loader.style.display = 'none';
+            }, 500); // Waktu harus cocok dengan durasi transisi di CSS (0.5s)
+        };
+    </script>
 </body>
 </html>
-
